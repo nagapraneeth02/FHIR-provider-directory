@@ -1,0 +1,266 @@
+{% extends "base.html" %} {% block title %}{{ resource.name[0].family if
+resource and resource.name else 'Provider' }} — Provider Finder{% endblock %} {%
+block content %}
+<div class="max-w-5xl mx-auto px-6 py-8">
+  <a
+    href="javascript:history.back()"
+    class="inline-flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 hover:text-gold-400 transition-colors mb-6"
+  >
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        d="M15 19l-7-7 7-7"
+      />
+    </svg>
+    Back to results
+  </a>
+
+  {% if not resource %}
+  <div class="glass-card rounded-2xl p-12 text-center">
+    <div class="text-5xl mb-4">😕</div>
+    <h2 class="font-display text-2xl font-bold mb-2">Provider not found</h2>
+    <p class="text-gray-500 dark:text-gray-400">
+      The {{ resource_type }} resource could not be retrieved from {{
+      payer.display_name }}.
+    </p>
+  </div>
+  {% else %}
+  <!-- Hero -->
+  <div
+    class="glass-card rounded-3xl p-8 mb-6 relative overflow-hidden gold-border-hover"
+  >
+    <div
+      class="absolute top-0 left-0 right-0 h-1"
+      style="background:{{ payer.color }}"
+    ></div>
+
+    <div class="flex flex-col md:flex-row gap-6 items-start">
+      <!-- Avatar -->
+      <div
+        class="w-24 h-24 rounded-3xl flex items-center justify-center font-display text-3xl font-bold text-ink-300 flex-shrink-0"
+        style="background:linear-gradient(135deg, {{ payer.color }} 0%, {{ payer.accent }} 100%)"
+      >
+        {% if resource.name and resource.name[0] %} {{
+        (resource.name[0].given[0][0] if resource.name[0].given else '')|upper
+        }}{{ (resource.name[0].family[0] if resource.name[0].family else
+        '')|upper }} {% else %} {{ resource_type[0] }} {% endif %}
+      </div>
+
+      <div class="flex-1">
+        <div
+          class="text-xs uppercase tracking-widest text-gold-400 font-semibold mb-2"
+        >
+          {{ resource_type }}
+        </div>
+        <h1 class="font-display text-4xl font-bold mb-2">
+          {% if resource.name and resource.name[0] %} {{
+          resource.name[0].prefix|join(' ') if resource.name[0].prefix }} {{
+          resource.name[0].given|join(' ') if resource.name[0].given }} {{
+          resource.name[0].family or '' }} {{ ', ' +
+          resource.name[0].suffix|join(' ') if resource.name[0].suffix }} {%
+          else %} {{ resource.name or 'Unnamed' }} {% endif %}
+        </h1>
+
+        <div class="flex flex-wrap items-center gap-2 mb-4">
+          <span
+            class="text-xs px-3 py-1 rounded-full font-semibold uppercase tracking-wider"
+            style="background:{{ payer.color }}22; color:{{ payer.color }}"
+          >
+            {{ payer.display_name }}
+          </span>
+          {% if resource.gender %}
+          <span class="text-xs px-3 py-1 rounded-full glass-card"
+            >{{ resource.gender|capitalize }}</span
+          >
+          {% endif %} {% if resource.active is sameas true %}
+          <span
+            class="text-xs px-3 py-1 rounded-full bg-emerald-400/10 text-emerald-400"
+            >● Active</span
+          >
+          {% endif %}
+        </div>
+
+        <!-- Quick contact bar -->
+        <div
+          class="flex flex-wrap gap-x-6 gap-y-2 text-sm text-gray-600 dark:text-gray-400"
+        >
+          {% for tel in (resource.telecom or []) %} {% if tel.system == 'phone'
+          %}
+          <span>📞 {{ tel.value }}</span>
+          {% elif tel.system == 'email' %}
+          <span>✉️ {{ tel.value }}</span>
+          {% elif tel.system == 'fax' %}
+          <span>📠 {{ tel.value }}</span>
+          {% elif tel.system == 'url' %}
+          <a
+            href="{{ tel.value }}"
+            target="_blank"
+            rel="noopener"
+            class="hover:text-gold-400 transition-colors"
+            >🌐 Website</a
+          >
+          {% endif %} {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Detail grid -->
+  <div class="grid md:grid-cols-2 gap-6">
+    <!-- Identifiers -->
+    {% if resource.identifier %}
+    <section class="glass-card rounded-2xl p-6">
+      <h3
+        class="text-xs uppercase tracking-widest text-gold-400 font-semibold mb-4"
+      >
+        Identifiers
+      </h3>
+      <ul class="space-y-3">
+        {% for ident in resource.identifier %}
+        <li
+          class="flex justify-between items-start border-b border-gray-200 dark:border-white/5 pb-3 last:border-b-0 last:pb-0"
+        >
+          <div class="text-sm text-gray-500 dark:text-gray-400">
+            {{ ident.type.text if ident.type and ident.type.text else
+            (ident.system.split('/')[-1] if ident.system else 'ID') }}
+          </div>
+          <div class="font-mono text-sm">{{ ident.value }}</div>
+        </li>
+        {% endfor %}
+      </ul>
+    </section>
+    {% endif %}
+
+    <!-- Addresses -->
+    {% if resource.address %}
+    <section class="glass-card rounded-2xl p-6">
+      <h3
+        class="text-xs uppercase tracking-widest text-gold-400 font-semibold mb-4"
+      >
+        Locations
+      </h3>
+      <ul class="space-y-4">
+        {% for a in resource.address %}
+        <li class="text-sm">
+          {% if a.line %}
+          <div>{{ a.line|join(', ') }}</div>
+          {% endif %}
+          <div class="text-gray-600 dark:text-gray-400">
+            {{ a.city }}{% if a.city and a.state %}, {% endif %}{{ a.state }} {{
+            a.postalCode }}
+          </div>
+          {% if a.use %}
+          <div class="text-xs uppercase tracking-widest text-gray-500 mt-1">
+            {{ a.use }}
+          </div>
+          {% endif %}
+        </li>
+        {% endfor %}
+      </ul>
+    </section>
+    {% endif %}
+
+    <!-- Qualifications -->
+    {% if resource.qualification %}
+    <section class="glass-card rounded-2xl p-6">
+      <h3
+        class="text-xs uppercase tracking-widest text-gold-400 font-semibold mb-4"
+      >
+        Qualifications
+      </h3>
+      <ul class="space-y-3">
+        {% for q in resource.qualification %}
+        <li
+          class="text-sm border-b border-gray-200 dark:border-white/5 pb-3 last:border-b-0 last:pb-0"
+        >
+          <div class="font-medium">
+            {{ q.code.text if q.code and q.code.text else
+            (q.code.coding[0].display if q.code and q.code.coding else
+            'Qualification') }}
+          </div>
+          {% if q.issuer and q.issuer.display %}
+          <div class="text-xs text-gray-500 mt-1">
+            Issued by {{ q.issuer.display }}
+          </div>
+          {% endif %} {% if q.period %}
+          <div class="text-xs text-gray-500">
+            {{ q.period.start[:10] if q.period.start }}{% if q.period.end %} –
+            {{ q.period.end[:10] }}{% endif %}
+          </div>
+          {% endif %}
+        </li>
+        {% endfor %}
+      </ul>
+    </section>
+    {% endif %}
+
+    <!-- Languages -->
+    {% if resource.communication %}
+    <section class="glass-card rounded-2xl p-6">
+      <h3
+        class="text-xs uppercase tracking-widest text-gold-400 font-semibold mb-4"
+      >
+        Languages Spoken
+      </h3>
+      <div class="flex flex-wrap gap-2">
+        {% for c in resource.communication %}
+        <span class="text-xs px-3 py-1.5 rounded-full glass-card">
+          {{ c.text or (c.coding[0].display if c.coding else 'Language') }}
+        </span>
+        {% endfor %}
+      </div>
+    </section>
+    {% endif %}
+
+    <!-- Specialties (for PractitionerRole) -->
+    {% if resource.specialty %}
+    <section class="glass-card rounded-2xl p-6 md:col-span-2">
+      <h3
+        class="text-xs uppercase tracking-widest text-gold-400 font-semibold mb-4"
+      >
+        Specialties
+      </h3>
+      <div class="flex flex-wrap gap-2">
+        {% for s in resource.specialty %}
+        <span class="text-sm px-4 py-2 rounded-full glass-card">
+          {{ s.text or (s.coding[0].display if s.coding else 'Specialty') }}
+        </span>
+        {% endfor %}
+      </div>
+    </section>
+    {% endif %}
+
+    <!-- Raw FHIR (collapsible, for tech demo) -->
+    <details class="glass-card rounded-2xl p-6 md:col-span-2 group">
+      <summary class="cursor-pointer flex items-center justify-between">
+        <h3
+          class="text-xs uppercase tracking-widest text-gold-400 font-semibold"
+        >
+          View Raw FHIR Resource
+        </h3>
+        <svg
+          class="w-5 h-5 text-gray-400 group-open:rotate-180 transition-transform"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M19 9l-7 7-7-7"
+          />
+        </svg>
+      </summary>
+      <pre
+        class="mt-4 p-4 bg-gray-100 dark:bg-ink-400/50 rounded-xl text-xs overflow-x-auto font-mono text-gray-700 dark:text-gray-300"
+      >
+{{ resource | tojson(indent=2) }}</pre
+      >
+    </details>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

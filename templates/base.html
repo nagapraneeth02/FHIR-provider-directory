@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{% block title %}Provider Finder{% endblock %}</title>
+
+    <!-- Tailwind via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        /* App is light-theme only. darkMode:"class" means dark: utilities
+           only activate under a .dark ancestor — which is never added — so
+           any leftover dark: classes in templates are inert (NOT triggered
+           by the OS color scheme). */
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              /* Color key is still named "gold" so the 6 templates don't need
+                 to change, but the values are a teal scale — this is the app's
+                 accent color. gold-400 (#0D9488) is the primary accent and is
+                 dark enough to read on a white background. */
+              gold: {
+                50: "#F0FDFA",
+                100: "#CCFBF1",
+                200: "#99F6E4",
+                300: "#2DD4BF",
+                400: "#0D9488",
+                500: "#0F766E",
+                600: "#115E59",
+                700: "#134E4A",
+                800: "#0C3B37",
+                900: "#082825",
+              },
+              ink: {
+                50: "#1A1B1F",
+                100: "#161719",
+                200: "#121316",
+                300: "#0E0F12",
+                400: "#0A0B0E",
+                500: "#08090C",
+                600: "#06070A",
+                700: "#040508",
+                800: "#020306",
+                900: "#000003",
+              },
+            },
+            fontFamily: {
+              display: ['"Playfair Display"', "Georgia", "serif"],
+              sans: ["Inter", "system-ui", "sans-serif"],
+            },
+            animation: {
+              shimmer: "shimmer 2s linear infinite",
+              glow: "glow 3s ease-in-out infinite",
+              "fade-up": "fadeUp 0.5s ease-out",
+              "slide-in": "slideIn 0.3s ease-out",
+            },
+            keyframes: {
+              shimmer: {
+                "0%": { backgroundPosition: "-200% 0" },
+                "100%": { backgroundPosition: "200% 0" },
+              },
+              glow: {
+                "0%,100%": { boxShadow: "0 0 20px rgba(13,148,136,0.2)" },
+                "50%": { boxShadow: "0 0 40px rgba(13,148,136,0.4)" },
+              },
+              fadeUp: {
+                "0%": { opacity: 0, transform: "translateY(10px)" },
+                "100%": { opacity: 1, transform: "translateY(0)" },
+              },
+              slideIn: {
+                "0%": { opacity: 0, transform: "translateX(-10px)" },
+                "100%": { opacity: 1, transform: "translateX(0)" },
+              },
+            },
+          },
+        },
+      };
+    </script>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@400;500;600;700;900&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Alpine.js with persist plugin -->
+    <script
+      defer
+      src="https://cdn.jsdelivr.net/npm/@alpinejs/persist@3.x.x/dist/cdn.min.js"
+    ></script>
+    <script
+      defer
+      src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"
+    ></script>
+
+    {% block head_extra %}{% endblock %}
+
+    <style>
+      [x-cloak] {
+        display: none !important;
+      }
+      body {
+        font-family: "Inter", sans-serif;
+      }
+      .font-display {
+        font-family: "Playfair Display", Georgia, serif;
+      }
+
+      /* Premium light gradient background */
+      .bg-premium-light {
+        background: radial-gradient(
+          ellipse at top,
+          #ffffff 0%,
+          #f8f9fb 50%,
+          #eef0f5 100%
+        );
+      }
+
+      /* Teal gradient text (accent) */
+      .gold-gradient {
+        background: linear-gradient(
+          135deg,
+          #14b8a6 0%,
+          #0d9488 50%,
+          #0f766e 100%
+        );
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+        color: transparent;
+      }
+
+      /* Glass morphism card */
+      .glass-card {
+        background: rgba(255, 255, 255, 0.75);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(15, 23, 42, 0.07);
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+      }
+
+      /* Teal border + soft glow on hover */
+      .gold-border-hover {
+        transition:
+          border-color 0.3s ease,
+          box-shadow 0.3s ease;
+      }
+      .gold-border-hover:hover {
+        border-color: rgba(13, 148, 136, 0.45);
+        box-shadow: 0 4px 20px rgba(13, 148, 136, 0.12);
+      }
+
+      /* Shimmering loading skeleton */
+      .skeleton {
+        background: linear-gradient(
+          90deg,
+          rgba(255, 255, 255, 0.04) 25%,
+          rgba(255, 255, 255, 0.08) 50%,
+          rgba(255, 255, 255, 0.04) 75%
+        );
+        background-size: 200% 100%;
+        animation: shimmer 2s linear infinite;
+      }
+
+      /* Scrollbar — light by default */
+      ::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #f1f5f9;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 5px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #0d9488;
+      }
+
+      /* Primary teal button — white text regardless of utility classes */
+      .btn-gold {
+        background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);
+        color: #ffffff !important;
+        transition: all 0.3s ease;
+      }
+      .btn-gold:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 10px 30px rgba(13, 148, 136, 0.3);
+      }
+
+      /* Subtle grid background pattern */
+      .grid-bg {
+        background-image:
+          linear-gradient(rgba(13, 148, 136, 0.04) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(13, 148, 136, 0.04) 1px, transparent 1px);
+        background-size: 60px 60px;
+      }
+    </style>
+  </head>
+
+  <body
+    class="bg-gray-50 text-gray-900 min-h-screen"
+  >
+    <!-- Fixed top nav -->
+    <nav
+      class="sticky top-0 z-50 backdrop-blur-xl bg-white/80 border-b border-gray-200"
+    >
+      <div
+        class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between"
+      >
+        <a href="/" class="flex items-center gap-3 group">
+          <div
+            class="w-10 h-10 rounded-xl btn-gold flex items-center justify-center font-display text-2xl text-ink-300 group-hover:rotate-6 transition-transform"
+          >
+            P
+          </div>
+          <div>
+            <div class="font-display text-xl font-bold gold-gradient">
+              Provider Finder
+            </div>
+            <div
+              class="text-[10px] uppercase tracking-widest text-gray-500 dark:text-gray-400 -mt-1"
+            >
+              Multi-Payer Network
+            </div>
+          </div>
+        </a>
+
+        <div class="flex items-center gap-2">
+          <a
+            href="/"
+            class="hidden md:block px-4 py-2 text-sm font-medium text-gray-700 hover:text-gold-400 transition-colors"
+            >Browse</a
+          >
+          <a
+            href="/search"
+            class="hidden md:block px-4 py-2 text-sm font-medium text-gray-700 hover:text-gold-400 transition-colors"
+            >Search</a
+          >
+          <a
+            href="/admin/health"
+            class="hidden md:block px-4 py-2 text-sm font-medium text-gray-700 hover:text-gold-400 transition-colors"
+            >Networks</a
+          >
+        </div>
+      </div>
+    </nav>
+
+    <!-- Main content -->
+    <main class="bg-premium-light min-h-[calc(100vh-73px)]">
+      {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-gray-200 mt-20">
+      <div
+        class="max-w-7xl mx-auto px-6 py-12 grid md:grid-cols-3 gap-8 text-sm"
+      >
+        <div>
+          <div class="font-display text-lg gold-gradient font-bold mb-2">
+            Provider Finder
+          </div>
+          <p class="text-gray-600 leading-relaxed">
+            A unified search across the public provider directories of the
+            largest US health insurers. Built on FHIR R4 and DaVinci PDEX
+            standards.
+          </p>
+        </div>
+        <div>
+          <div class="font-semibold mb-3 text-gray-900">
+            Networks
+          </div>
+          <ul class="space-y-1 text-gray-600">
+            {% for p in (payers if payers else []) %}
+            <li>{{ p.display_name }}</li>
+            {% endfor %}
+          </ul>
+        </div>
+        <div>
+          <div class="font-semibold mb-3 text-gray-900">
+            About the data
+          </div>
+          <p class="text-gray-600 leading-relaxed">
+            All provider data is fetched live from federally-mandated public
+            FHIR endpoints. We don't store or cache any provider information. No
+            login required.
+          </p>
+        </div>
+      </div>
+      <div
+        class="border-t border-gray-200 py-6 text-center text-xs text-gray-500"
+      >
+        Built with FHIR R4 · DaVinci PDEX Plan Net IG · Public payer endpoints
+        only
+      </div>
+    </footer>
+
+    {% block scripts %}{% endblock %}
+  </body>
+</html>

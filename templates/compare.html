@@ -1,0 +1,203 @@
+{% extends "base.html" %} {% block title %}Compare Providers — Provider Finder{%
+endblock %} {% block content %}
+<div class="max-w-7xl mx-auto px-6 py-12">
+  <div class="mb-10">
+    <a
+      href="javascript:history.back()"
+      class="inline-flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-gold-400 transition-colors mb-6"
+    >
+      <svg
+        class="w-4 h-4"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M10 19l-7-7m0 0l7-7m-7 7h18"
+        />
+      </svg>
+      Back to results
+    </a>
+
+    <div class="text-center">
+      <div
+        class="text-xs uppercase tracking-widest text-gold-400 font-semibold mb-3"
+      >
+        Side-by-side
+      </div>
+      <h1 class="font-display text-4xl md:text-5xl font-bold mb-3">
+        Compare <span class="gold-gradient">Providers</span>
+      </h1>
+      <p class="text-gray-500 dark:text-gray-400">
+        {{ providers|length }} providers selected
+      </p>
+    </div>
+  </div>
+
+  {% if providers %}
+  <div class="grid grid-cols-1 md:grid-cols-{{ providers|length }} gap-6">
+    {% for provider in providers %}
+    <div
+      class="glass-card rounded-3xl p-8 relative overflow-hidden group hover:border-gold-400/30 transition-all duration-300"
+    >
+      <div
+        class="absolute top-0 left-0 right-0 h-1"
+        style="background: {{ provider.payer.color }}"
+      ></div>
+
+      <div class="flex flex-col items-center text-center mb-8">
+        <div
+          class="w-20 h-20 rounded-2xl flex items-center justify-center font-display text-3xl font-bold text-ink-300 shadow-xl mb-4"
+          style="background: linear-gradient(135deg, {{ provider.payer.color }} 0%, {{ provider.payer.color }}cc 100%)"
+        >
+          {{ provider.clean_name[0]|upper }}
+        </div>
+
+        <h2 class="text-2xl font-bold mb-3">{{ provider.clean_name }}</h2>
+
+        <span
+          class="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider"
+          style="background: {{ provider.payer.color }}15; color: {{ provider.payer.color }}; border: 1px solid {{ provider.payer.color }}30;"
+        >
+          {{ provider.payer.display_name }}
+        </span>
+      </div>
+
+      <div class="w-full h-px bg-gray-200 dark:bg-white/5 mb-8"></div>
+
+      <div class="space-y-6">
+        <div>
+          <div
+            class="text-[0.65rem] uppercase tracking-widest text-gray-500 font-bold mb-1"
+          >
+            Type
+          </div>
+          <div class="font-medium text-gray-800 dark:text-gray-200">
+            {{ provider.resource_type }}
+          </div>
+        </div>
+
+        <div class="w-full h-px bg-gray-200 dark:bg-white/5"></div>
+
+        <div>
+          <div
+            class="text-[0.65rem] uppercase tracking-widest text-gray-500 font-bold mb-1"
+          >
+            Gender
+          </div>
+          <div class="font-medium text-gray-800 dark:text-gray-200">
+            {{ provider.resource.gender | capitalize | default('—', true) }}
+          </div>
+        </div>
+
+        <div class="w-full h-px bg-gray-200 dark:bg-white/5"></div>
+
+        <div>
+          <div
+            class="text-[0.65rem] uppercase tracking-widest text-gray-500 font-bold mb-1"
+          >
+            NPI
+          </div>
+          <div class="font-mono text-gray-800 dark:text-gray-200">
+            {% set npi_found = false %} {% for id in
+            provider.resource.identifier %} {% if 'npi' in (id.system|lower) or
+            'npi' in ((id.type.text|default(''))|lower) %} {{ id.value }} {% set
+            npi_found = true %} {% endif %} {% endfor %} {% if not npi_found
+            %}—{% endif %}
+          </div>
+        </div>
+
+        <div class="w-full h-px bg-gray-200 dark:bg-white/5"></div>
+
+        <div>
+          <div
+            class="text-[0.65rem] uppercase tracking-widest text-gray-500 font-bold mb-1"
+          >
+            Location
+          </div>
+          <div class="font-medium text-gray-800 dark:text-gray-200">
+            {% if provider.resource.address and provider.resource.address|length
+            > 0 %} {% set addr = provider.resource.address[0] %} {{ addr.city |
+            default('Unknown City', true) }}, {{ addr.state | default('Unknown
+            State', true) }} {% else %} — {% endif %}
+          </div>
+        </div>
+
+        <div class="w-full h-px bg-gray-200 dark:bg-white/5"></div>
+
+        <div>
+          <div
+            class="text-[0.65rem] uppercase tracking-widest text-gray-500 font-bold mb-1"
+          >
+            Phone
+          </div>
+          <div class="font-medium text-gray-800 dark:text-gray-200">
+            {% set phone_found = false %} {% for t in provider.resource.telecom
+            %} {% if t.system == 'phone' %} {{ t.value }} {% set phone_found =
+            true %} {% endif %} {% endfor %} {% if not phone_found %}—{% endif
+            %}
+          </div>
+        </div>
+
+        <div class="w-full h-px bg-gray-200 dark:bg-white/5"></div>
+
+        <div>
+          <div
+            class="text-[0.65rem] uppercase tracking-widest text-gray-500 font-bold mb-1"
+          >
+            Languages
+          </div>
+          <div class="font-medium text-gray-800 dark:text-gray-200">
+            {% if provider.resource.communication %} {% for comm in
+            provider.resource.communication %} {{ comm.coding[0].display |
+            default(comm.text, true) }}{% if not loop.last %}, {% endif %} {%
+            endfor %} {% else %} — {% endif %}
+          </div>
+        </div>
+
+        <div class="w-full h-px bg-gray-200 dark:bg-white/5"></div>
+
+        <div>
+          <div
+            class="text-[0.65rem] uppercase tracking-widest text-gray-500 font-bold mb-1"
+          >
+            Specialties & Qualifications
+          </div>
+          <div class="font-medium text-gray-800 dark:text-gray-200 text-sm leading-relaxed">
+            {% set spec_found = false %} {% if provider.resource.specialty %} {%
+            for spec in provider.resource.specialty %} {{ spec.coding[0].display
+            | default(spec.text, true) }}{% if not loop.last %}, {% endif %} {%
+            set spec_found = true %} {% endfor %} {% endif %} {% if
+            provider.resource.qualification %} {% for qual in
+            provider.resource.qualification %} {% if qual.code and
+            qual.code.coding %} {{ qual.code.coding[0].display |
+            default(qual.code.text, true) }}{% if not loop.last %}, {% endif %}
+            {% set spec_found = true %} {% endif %} {% endfor %} {% endif %} {%
+            if not spec_found %}—{% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="max-w-2xl mx-auto mt-12 text-center glass-card rounded-3xl p-16">
+    <div class="text-6xl mb-6">⚖️</div>
+    <h2 class="font-display text-3xl font-bold mb-4">Nothing to compare yet</h2>
+    <p class="text-gray-500 dark:text-gray-400 mb-8 text-lg">
+      Add 2 or 3 providers from the search results page to compare them
+      side-by-side.
+    </p>
+    <a
+      href="/search"
+      class="inline-block btn-gold text-ink-300 font-semibold py-3 px-8 rounded-xl transition-transform hover:scale-105"
+    >
+      Start a search
+    </a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
