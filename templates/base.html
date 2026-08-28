@@ -17,21 +17,36 @@
         theme: {
           extend: {
             colors: {
-              /* Color key is still named "gold" so the 6 templates don't need
-                 to change, but the values are a teal scale — this is the app's
-                 accent color. gold-400 (#0D9488) is the primary accent and is
-                 dark enough to read on a white background. */
+              /* Healthcare palette (WCAG 2.1 AA contrast, calm & authoritative)
+                 The color key is still named "gold" so the templates don't need
+                 to change, but the values are the medical deep-teal primary.
+                 gold-400 (#0D5257) is the primary — establishes clinical trust. */
               gold: {
-                50: "#F0FDFA",
-                100: "#CCFBF1",
-                200: "#99F6E4",
-                300: "#2DD4BF",
-                400: "#0D9488",
-                500: "#0F766E",
-                600: "#115E59",
-                700: "#134E4A",
-                800: "#0C3B37",
-                900: "#082825",
+                50:  "#F0F7F7",  // subtle chip backgrounds
+                100: "#D9EAEB",
+                200: "#A6CACC",
+                300: "#4E888D",
+                400: "#0D5257",  // primary
+                500: "#0A4145",
+                600: "#073034",
+                700: "#052024",
+                800: "#031416",
+                900: "#01090A",
+              },
+              /* Accent cyan — bright CTA color for buttons / focus actions */
+              accent: {
+                50:  "#F0F9FF",
+                100: "#E0F2FE",
+                400: "#38BDF8",
+                500: "#0EA5E9",  // primary action
+                600: "#0284C7",
+                700: "#0369A1",
+              },
+              /* Semantic status colors used across the app */
+              status: {
+                active:   "#22C55E",  // Accepting New Patients (mint green)
+                inactive: "#EF4444",  // Not Accepting (soft crimson)
+                warning:  "#F59E0B",  // Warning / not configured
               },
               ink: {
                 50: "#1A1B1F",
@@ -47,8 +62,12 @@
               },
             },
             fontFamily: {
-              display: ['"Playfair Display"', "Georgia", "serif"],
-              sans: ["Inter", "system-ui", "sans-serif"],
+              display: ['"Instrument Serif"', "Georgia", "serif"],
+              sans: ['"Geist"', '"IBM Plex Sans"', "system-ui", "sans-serif"],
+              mono: ['"Geist Mono"', '"IBM Plex Mono"', "monospace"],
+              /* Insurer/payer name headings use Montserrat — clean, structured,
+                 works well for brand-name typography. */
+              insurer: ['"Montserrat"', '"Geist"', "system-ui", "sans-serif"],
             },
             animation: {
               shimmer: "shimmer 2s linear infinite",
@@ -79,11 +98,11 @@
       };
     </script>
 
-    <!-- Fonts -->
+    <!-- Fonts: Instrument Serif (display), Geist (body/mono), Montserrat (insurer names) -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@400;500;600;700;900&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600;700;800&family=Geist+Mono:wght@400;500&family=Montserrat:wght@500;600;700&display=swap"
       rel="stylesheet"
     />
 
@@ -103,55 +122,112 @@
       [x-cloak] {
         display: none !important;
       }
+
+      /* Body — Geist for a clean, technical feel */
       body {
-        font-family: "Inter", sans-serif;
+        font-family:
+          "Geist", "IBM Plex Sans", system-ui, -apple-system,
+          "Segoe UI", sans-serif;
+        font-feature-settings: "ss01", "cv01";
+        -webkit-font-smoothing: antialiased;
       }
+
+      /* Display — Instrument Serif, italic for accents. Editorial character. */
       .font-display {
-        font-family: "Playfair Display", Georgia, serif;
+        font-family: "Instrument Serif", "Iowan Old Style", Georgia, serif;
+        font-weight: 400;
+        letter-spacing: -0.01em;
+      }
+      .font-display-italic {
+        font-family: "Instrument Serif", Georgia, serif;
+        font-style: italic;
+      }
+      .font-mono {
+        font-family: "Geist Mono", "IBM Plex Mono", ui-monospace, monospace;
+      }
+      /* Insurer/payer name headings — Montserrat for a distinct, brand-like tone */
+      .font-insurer {
+        font-family: "Montserrat", "Geist", system-ui, sans-serif;
+        letter-spacing: -0.005em;
       }
 
-      /* Premium light gradient background */
+      /* Slate-tint page background — reduces cognitive load per WCAG guidance */
       .bg-premium-light {
-        background: radial-gradient(
-          ellipse at top,
-          #ffffff 0%,
-          #f8f9fb 50%,
-          #eef0f5 100%
-        );
+        background: #F8FAFC;
       }
 
-      /* Teal gradient text (accent) */
+      /* Primary teal accent used inline. Deeper than pure text-gold-400 so it
+         still reads as an active surface on the slate background. */
       .gold-gradient {
-        background: linear-gradient(
-          135deg,
-          #14b8a6 0%,
-          #0d9488 50%,
-          #0f766e 100%
-        );
-        -webkit-background-clip: text;
-        background-clip: text;
-        -webkit-text-fill-color: transparent;
-        color: transparent;
+        color: #0D5257;
       }
 
-      /* Glass morphism card */
+      /* Flat clinical card — white surface, hairline slate border */
       .glass-card {
-        background: rgba(255, 255, 255, 0.75);
-        backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
-        border: 1px solid rgba(15, 23, 42, 0.07);
-        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+        background: #FFFFFF;
+        border: 1px solid #E2E8F0;
+        border-radius: 12px;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
       }
 
-      /* Teal border + soft glow on hover */
+      /* Card hover — subtle lift, primary-teal border */
       .gold-border-hover {
         transition:
-          border-color 0.3s ease,
-          box-shadow 0.3s ease;
+          border-color 0.2s ease,
+          box-shadow 0.2s ease,
+          transform 0.15s ease;
       }
       .gold-border-hover:hover {
-        border-color: rgba(13, 148, 136, 0.45);
-        box-shadow: 0 4px 20px rgba(13, 148, 136, 0.12);
+        border-color: #0D5257;
+        box-shadow: 0 4px 12px rgba(13, 82, 87, 0.10);
+      }
+
+      /* -- Status badges (mint green / crimson / amber) -- */
+      .badge-active {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.375rem;
+        padding: 0.25rem 0.625rem;
+        font-size: 0.7rem;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+        border-radius: 999px;
+        color: #15803D;
+        background: rgba(34, 197, 94, 0.12);
+        border: 1px solid rgba(34, 197, 94, 0.30);
+      }
+      .badge-active::before {
+        content: "";
+        width: 6px; height: 6px; border-radius: 50%;
+        background: #22C55E;
+      }
+      .badge-inactive {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.375rem;
+        padding: 0.25rem 0.625rem;
+        font-size: 0.7rem;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+        border-radius: 999px;
+        color: #B91C1C;
+        background: rgba(239, 68, 68, 0.10);
+        border: 1px solid rgba(239, 68, 68, 0.28);
+      }
+      .badge-inactive::before {
+        content: "";
+        width: 6px; height: 6px; border-radius: 50%;
+        background: #EF4444;
+      }
+
+      /* Faint dividing rule you can drop into layouts */
+      .rule {
+        border-top: 1px solid #e7e5e4;
+      }
+
+      /* Tabular numerals for count displays */
+      .tabular {
+        font-variant-numeric: tabular-nums;
       }
 
       /* Shimmering loading skeleton */
@@ -179,32 +255,63 @@
         border-radius: 5px;
       }
       ::-webkit-scrollbar-thumb:hover {
-        background: #0d9488;
+        background: #0D5257;
       }
 
-      /* Primary teal button — white text regardless of utility classes */
+      /* Primary button — deep teal (domain-authority color) */
       .btn-gold {
-        background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);
-        color: #ffffff !important;
-        transition: all 0.3s ease;
+        background: #0D5257;
+        color: #FFFFFF !important;
+        font-weight: 500;
+        transition:
+          background 0.15s ease,
+          box-shadow 0.15s ease;
       }
       .btn-gold:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 10px 30px rgba(13, 148, 136, 0.3);
+        background: #073034;
+        box-shadow: 0 2px 8px rgba(13, 82, 87, 0.22);
       }
 
-      /* Subtle grid background pattern */
+      /* Accent CTA button — bright cyan (per spec: search / directions / contact) */
+      .btn-accent {
+        background: #0EA5E9;
+        color: #FFFFFF !important;
+        font-weight: 500;
+        transition:
+          background 0.15s ease,
+          box-shadow 0.15s ease;
+      }
+      .btn-accent:hover {
+        background: #0284C7;
+        box-shadow: 0 2px 8px rgba(14, 165, 233, 0.28);
+      }
+
+      /* Outline secondary button — matches primary color, hollow */
+      .btn-outline {
+        background: #FFFFFF;
+        color: #0D5257 !important;
+        border: 1px solid #0D5257;
+        font-weight: 500;
+        transition:
+          background 0.15s ease,
+          color 0.15s ease;
+      }
+      .btn-outline:hover {
+        background: #F0F7F7;
+      }
+
+      /* Very faint grid background pattern (kept for hero use if wanted) */
       .grid-bg {
         background-image:
-          linear-gradient(rgba(13, 148, 136, 0.04) 1px, transparent 1px),
-          linear-gradient(90deg, rgba(13, 148, 136, 0.04) 1px, transparent 1px);
-        background-size: 60px 60px;
+          linear-gradient(rgba(0, 0, 0, 0.03) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(0, 0, 0, 0.03) 1px, transparent 1px);
+        background-size: 40px 40px;
       }
     </style>
   </head>
 
   <body
-    class="bg-gray-50 text-gray-900 min-h-screen"
+    class="bg-slate-50 text-slate-900 min-h-screen"
   >
     <!-- Fixed top nav -->
     <nav
@@ -215,16 +322,16 @@
       >
         <a href="/" class="flex items-center gap-3 group">
           <div
-            class="w-10 h-10 rounded-xl btn-gold flex items-center justify-center font-display text-2xl text-ink-300 group-hover:rotate-6 transition-transform"
+            class="w-10 h-10 rounded-lg btn-gold flex items-center justify-center font-insurer text-xl font-bold group-hover:scale-105 transition-transform"
           >
             P
           </div>
           <div>
-            <div class="font-display text-xl font-bold gold-gradient">
+            <div class="font-insurer text-xl font-bold tracking-tight text-slate-900">
               Provider Finder
             </div>
             <div
-              class="text-[10px] uppercase tracking-widest text-gray-500 dark:text-gray-400 -mt-1"
+              class="text-[10px] uppercase tracking-[0.15em] font-medium text-slate-500 -mt-0.5"
             >
               Multi-Payer Network
             </div>
@@ -275,7 +382,7 @@
           <div class="font-semibold mb-3 text-gray-900">
             Networks
           </div>
-          <ul class="space-y-1 text-gray-600">
+          <ul class="space-y-1 text-gray-600 font-insurer">
             {% for p in (payers if payers else []) %}
             <li>{{ p.display_name }}</li>
             {% endfor %}

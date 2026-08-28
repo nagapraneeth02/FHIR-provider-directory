@@ -80,7 +80,7 @@
           {% for p in payers %}
           <label class="cursor-pointer">
             <input type="checkbox" name="payer" value="{{ p.id }}" {{ 'checked' if p.id in selected_payer_ids else '' }} class="peer sr-only" />
-            <span class="px-4 py-2 rounded-full glass-card text-sm flex items-center gap-2 peer-checked:bg-gold-400/20 peer-checked:border-gold-400 transition-all">
+            <span class="font-insurer px-4 py-2 rounded-full glass-card text-sm flex items-center gap-2 peer-checked:bg-gold-400/20 peer-checked:border-gold-400 transition-all">
               <span class="w-2 h-2 rounded-full" style="background:{{ p.color }}"></span>
               {{ p.display_name }}
             </span>
@@ -103,7 +103,7 @@
             <div class="flex items-center justify-between py-1">
               <div class="flex items-center gap-2">
                 <span class="w-2 h-2 rounded-full" :style="`background:${s.payer.color}`"></span>
-                <span x-text="s.payer.short_name"></span>
+                <span class="font-insurer font-medium" x-text="s.payer.short_name"></span>
               </div>
               <div class="text-right">
                 <span x-show="s.error" class="text-xs text-red-400" :title="s.error">⚠</span>
@@ -231,15 +231,26 @@
 
         <template x-for="(entry, idx) in filteredResults" :key="entry._payer_id + '-' + idx">
           <article
-            class="glass-card rounded-2xl p-5 gold-border-hover transition-all"
-            x-data="{ 
+            class="glass-card p-5 gold-border-hover"
+            x-data="{
               key: entry._payer_id + '|' + entry.resource.resourceType + '|' + entry.resource.id + '|' + idx,
               name: getName(entry),
               get initials() {
                 if (this.name === 'Loading name...') return '...';
-                const clean = (this.name || 'Unknown Provider').replace(/^(Dr\.?|Mr\.?|Mrs\.?|Ms\.?)\s+/i, '');
+                const clean = (this.name || 'Unknown').replace(/^(Dr\.?|Mr\.?|Mrs\.?|Ms\.?)\s+/i, '');
                 const parts = clean.split(/\s+/).filter(Boolean);
                 return parts.length > 0 ? parts.slice(0, 2).map(w => w[0]).join('').toUpperCase() : '?';
+              },
+              get accepting() {
+                // FHIR convention: active undefined OR true → accepting.
+                // Only explicit false marks a provider as not accepting.
+                const a = entry.resource.active;
+                return a !== false;
+              },
+              get directionsUrl() {
+                const loc = getLocation(entry);
+                if (!loc) return null;
+                return 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(loc);
               },
               async fetchName() {
                 if (this.name === 'Practitioner Role' && entry.resource.practitioner && entry.resource.practitioner.reference) {
@@ -262,35 +273,65 @@
           >
             <div class="flex items-start gap-4">
               <div
-                class="w-14 h-14 rounded-2xl flex-shrink-0 flex items-center justify-center font-display text-xl font-bold text-ink-300 transition-all"
-                :style="`background:linear-gradient(135deg, ${entry._payer_color} 0%, ${entry._payer_color}cc 100%)`"
+                class="w-14 h-14 rounded-lg flex-shrink-0 flex items-center justify-center font-semibold text-lg text-white"
+                :style="`background:${entry._payer_color}`"
                 x-text="initials"
               ></div>
 
               <div class="flex-1 min-w-0">
+                <!-- Header: name + accepting badge + icon actions -->
                 <div class="flex items-start justify-between gap-3 mb-1">
-                  <h3 class="font-semibold text-lg truncate" x-text="name"></h3>
+                  <div class="flex-1 min-w-0">
+                    <h3 class="font-semibold text-lg text-slate-900 truncate" x-text="name"></h3>
+                    <div class="mt-1.5">
+                      <span x-show="accepting" class="badge-active">Accepting New Patients</span>
+                      <span x-show="!accepting" class="badge-inactive">Not Accepting</span>
+                    </div>
+                  </div>
                   <div class="flex items-center gap-1 flex-shrink-0">
-                    <button @click="toggleFavorite(key, name)" class="p-2 rounded-lg hover:bg-white/5 transition-colors" :title="isFavorite(key) ? 'Remove favorite' : 'Add favorite'">
-                      <svg class="w-5 h-5" :class="isFavorite(key) ? 'fill-gold-400 text-gold-400' : 'fill-none text-gray-400'" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.196-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" /></svg>
+                    <button @click="toggleFavorite(key, name)" class="p-2 rounded-md hover:bg-slate-100 transition-colors" :title="isFavorite(key) ? 'Remove favorite' : 'Add favorite'">
+                      <svg class="w-5 h-5" :class="isFavorite(key) ? 'fill-gold-400 text-gold-400' : 'fill-none text-slate-400'" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.196-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" /></svg>
                     </button>
-                    <button @click="toggleCompare(key, name)" class="p-2 rounded-lg hover:bg-white/5 transition-colors" :class="isInCompare(key) ? 'text-gold-400' : 'text-gray-400'" title="Compare">
+                    <button @click="toggleCompare(key, name)" class="p-2 rounded-md hover:bg-slate-100 transition-colors" :class="isInCompare(key) ? 'text-gold-400' : 'text-slate-400'" title="Compare">
                       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
                     </button>
                   </div>
                 </div>
 
-                <div class="text-sm text-gray-500 dark:text-gray-400 mb-3" x-text="getSubtitle(entry)"></div>
-
-                <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-600 dark:text-gray-400">
-                  <span x-show="getLocation(entry)" class="flex items-center gap-1">📍 <span x-text="getLocation(entry)"></span></span>
-                  <span x-show="getPhone(entry)" class="flex items-center gap-1">📞 <span x-text="getPhone(entry)"></span></span>
-                  <span x-show="getNPI(entry)" class="flex items-center gap-1 font-mono text-xs">NPI: <span x-text="getNPI(entry)"></span></span>
+                <!-- Subtext: specialty + network tier -->
+                <div class="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+                  <span class="text-slate-700 font-medium" x-text="getSubtitle(entry) || 'General Practice'"></span>
+                  <span class="text-slate-300">•</span>
+                  <span class="font-insurer text-xs px-2 py-0.5 rounded font-semibold uppercase tracking-wide" :style="`background:${entry._payer_color}18; color:${entry._payer_color}`" x-text="entry._payer_name"></span>
                 </div>
 
-                <div class="flex items-center justify-between mt-4 pt-3 border-t border-gray-200 dark:border-white/5">
-                  <span class="text-xs px-3 py-1 rounded-full font-semibold uppercase tracking-wider" :style="`background:${entry._payer_color}22; color:${entry._payer_color}`" x-text="entry._payer_name"></span>
-                  <a :href="`/provider/${entry._payer_id}/${entry.resource.resourceType}/${entry.resource.id}`" class="text-sm font-medium text-gold-400 hover:underline">View details →</a>
+                <!-- Body: primary address + phone + NPI -->
+                <div class="mt-3 space-y-1 text-sm text-slate-600">
+                  <div x-show="getLocation(entry)" class="flex items-start gap-2">
+                    <svg class="w-4 h-4 mt-0.5 flex-shrink-0 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    <span x-text="getLocation(entry)"></span>
+                  </div>
+                  <div x-show="getPhone(entry)" class="flex items-start gap-2">
+                    <svg class="w-4 h-4 mt-0.5 flex-shrink-0 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
+                    <span x-text="getPhone(entry)"></span>
+                  </div>
+                  <div x-show="getNPI(entry)" class="flex items-start gap-2">
+                    <span class="text-xs font-mono text-slate-400 mt-0.5">NPI</span>
+                    <span class="font-mono text-xs tabular" x-text="getNPI(entry)"></span>
+                  </div>
+                </div>
+
+                <!-- Footer: outline "View Full Profile" + filled accent "Directions" -->
+                <div class="mt-4 pt-4 rule flex items-center gap-2">
+                  <a :href="`/provider/${entry._payer_id}/${entry.resource.resourceType}/${entry.resource.id}`"
+                     class="btn-outline text-sm px-4 py-2 rounded-md">
+                    View Full Profile
+                  </a>
+                  <a x-show="directionsUrl" :href="directionsUrl" target="_blank" rel="noopener"
+                     class="btn-accent text-sm px-4 py-2 rounded-md inline-flex items-center gap-1.5">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
+                    Directions
+                  </a>
                 </div>
               </div>
             </div>
