@@ -420,4 +420,9 @@ def not_found(e):
 
 
 if __name__ == "__main__":
-    app.run(debug=True, port=5050)
+    # Local dev entry point. In production, Render / any WSGI host runs the
+    # Procfile's `gunicorn app:app` command instead, so this block is skipped.
+    # Debug defaults ON locally; set FLASK_DEBUG=false to turn it off.
+    port  = int(os.environ.get("PORT", 5050))
+    debug = os.environ.get("FLASK_DEBUG", "true").lower() != "false"
+    app.run(debug=debug, port=port, host="0.0.0.0")
